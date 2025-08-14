@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Corne Keymap Editor</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 1400px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .layer-selector {
+            display: flex;
+            gap: 10px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .layer-btn, .action-btn {
+            padding: 10px 20px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .layer-btn.active, .action-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .save-btn {
+            background: #28a745;
+            border-color: #28a745;
+        }
+
+        .save-btn:hover {
+            background: #218838;
+        }
+
+        .keyboard {
+            display: flex;
+            justify-content: center;
+            gap: 60px;
+            margin: 20px 0;
+        }
+
+        .half {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .row {
+            display: flex;
+            gap: 5px;
+        }
+
+        .key {
+            width: 65px;
+            height: 65px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: bold;
+            background: linear-gradient(145deg, #f0f0f0, #ffffff);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            position: relative;
+            transition: all 0.2s;
+            cursor: pointer;
+            text-align: center;
+            word-break: break-all;
+        }
+
+        .key:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            border-color: #667eea;
+        }
+
+        .key.selected {
+            border-color: #667eea;
+            border-width: 3px;
+            background: linear-gradient(145deg, #e8f0fe, #f0f7ff);
+        }
+
+        .key.thumb {
+            width: 80px;
+        }
+
+        .key.space {
+            width: 100px;
+        }
+
+        .key.modifier {
+            background: linear-gradient(145deg, #e8e8e8, #f5f5f5);
+            border-color: #bbb;
+        }
+
+        .key.layer-key {
+            background: linear-gradient(145deg, #ffd700, #ffed4e);
+            border-color: #ffc107;
+        }
+
+        .key.bluetooth {
+            background: linear-gradient(145deg, #4a90e2, #5ba0f2);
+            color: white;
+            border-color: #3a80d2;
+        }
+
+        .key.transparent {
+            background: linear-gradient(145deg, #f8f8f8, #ffffff);
+            opacity: 0.6;
+            border-style: dashed;
+        }
+
+        .thumb-cluster {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .editor-panel {
+            display: flex;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .key-editor {
+            flex: 1;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+        }
+
+        .key-editor h3 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        .key-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .key-suggestions {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .suggestion {
+            padding: 8px 12px;
+            background: #e9ecef;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+            font-size: 12px;
+            transition: background 0.2s;
+        }
+
+        .suggestion:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .keymap-source {
+            flex: 1;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+        }
+
+        .keymap-source h3 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        .keymap-textarea {
+            width: 100%;
+            height: 300px;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            resize: vertical;
+        }
+
+        .layer-info {
+            text-align: center;
+            color: #666;
+            margin: 20px 0;
+            font-style: italic;
+        }
+
+        .left-label, .right-label {
+            text-align: center;
+            color: #888;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .status.success {
+            background: #28a745;
+        }
+
+        .status.error {
+            background: #dc3545;
+        }
+
+        .status.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Interactive Corne Keymap Editor</h1>
+        
+        <div class="controls">
+            <div class="layer-selector">
+                <button class="layer-btn active" onclick="showLayer(0)">Default</button>
+                <button class="layer-btn" onclick="showLayer(1)">Lower (1)</button>
+                <button class="layer-btn" onclick="showLayer(2)">Raise (2)</button>
+                <button class="layer-btn" onclick="showLayer(3)">Adjust (3)</button>
+            </div>
+            
+            <div class="actions">
+                <button class="action-btn" onclick="loadKeymap()">Load from File</button>
+                <button class="action-btn save-btn" onclick="saveKeymap()">Save to File</button>
+                <button class="action-btn" onclick="exportKeymap()">Export Config</button>
+            </div>
+        </div>
+
+        <div class="keyboard" id="keyboard">
+            <!-- Keyboard will be rendered here -->
+        </div>
+
+        <div class="layer-info" id="layerInfo">
+            Default Layer - QWERTY Layout (Click any key to edit)
+        </div>
+
+        <div class="editor-panel">
+            <div class="key-editor">
+                <h3>Edit Selected Key</h3>
+                <div id="keyEditorContent">
+                    <p>Click on a key to edit its binding</p>
+                </div>
+            </div>
+
+            <div class="keymap-source">
+                <h3>Generated Keymap Source</h3>
+                <textarea id="keymapSource" class="keymap-textarea" readonly></textarea>
+                <button class="action-btn" onclick="copyToClipboard()">Copy to Clipboard</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="status" id="status"></div>
+
+    <script>
+        // Keymap data structure
+        let keymap = {
+            layers: [
+                {
+                    name: "default_layer",
+                    display: "Default Layer - QWERTY Layout",
+                    keys: [
+                        // Left half (18 keys + 3 thumb)
+                        ["&kp TAB", "&kp Q", "&kp W", "&kp E", "&kp R", "&kp T",
+                         "&kp LCTRL", "&kp A", "&kp S", "&kp D", "&kp F", "&kp G",
+                         "&kp LSHFT", "&kp Z", "&kp X", "&kp C", "&kp V", "&kp B",
+                         "&kp LGUI", "&mo 1", "&kp SPACE"],
+                        // Right half (18 keys + 3 thumb)
+                        ["&kp Y", "&kp U", "&kp I", "&kp O", "&kp P", "&kp BSPC",
+                         "&kp H", "&kp J", "&kp K", "&kp L", "&kp SEMI", "&kp SQT",
+                         "&kp N", "&kp M", "&kp COMMA", "&kp DOT", "&kp FSLH", "&kp ESC",
+                         "&kp RET", "&mo 2", "&kp RALT"]
+                    ]
+                },
+                {
+                    name: "lower_layer",
+                    display: "Lower Layer (1) - Numbers & Navigation",
+                    keys: [
+                        ["&kp ESC", "&kp N1", "&kp N2", "&kp N3", "&kp N4", "&kp N5",
+                         "&trans", "&trans", "&trans", "&trans", "&trans", "&trans",
+                         "&trans", "&trans", "&trans", "&trans", "&trans", "&trans",
+                         "&trans", "&trans", "&trans"],
+                        ["&kp N6", "&kp N7", "&kp N8", "&kp N9", "&kp N0", "&kp BSPC",
+                         "&kp LEFT", "&kp DOWN", "&kp UP", "&kp RIGHT", "&trans", "&trans",
+                         "&trans", "&trans", "&trans", "&trans", "&trans", "&trans",
+                         "&trans", "&mo 3", "&trans"]
+                    ]
+                },
+                {
+                    name: "raise_layer",
+                    display: "Raise Layer (2) - Symbols",
+                    keys: [
+                        ["&kp ESC", "&kp EXCL", "&kp AT", "&kp HASH", "&kp DLLR", "&kp PRCNT",
+                         "&trans", "&trans", "&trans", "&trans", "&trans", "&trans",
+                         "&trans", "&trans", "&trans", "&trans", "&trans", "&trans",
+                         "&trans", "&mo 3", "&trans"],
+                        ["&kp CARET", "&kp AMPS", "&kp STAR", "&kp LPAR", "&kp RPAR", "&kp BSPC",
+                         "&kp MINUS", "&kp EQUAL", "&kp LBKT", "&kp RBKT", "&kp BSLH", "&kp GRAVE",
+                         "&kp UNDER", "&kp PLUS", "&kp LBRC", "&kp RBRC", "&kp PIPE", "&kp TILDE",
+                         "&trans", "&trans", "&trans"]
+                    ]
+                },
+                {
+                    name: "adjust_layer",
+                    display: "Adjust Layer (3) - Bluetooth & System",
+                    keys: [
+                        ["&bt BT_CLR", "&bt BT_SEL 0", "&bt BT_SEL 1", "&bt BT_SEL 2", "&bt BT_SEL 3", "&bt BT_SEL 4",
+                         "&trans", "&trans", "&trans", "&trans", "&trans", "&trans",
+                         "&trans", "&trans", "&trans", "&trans", "&trans", "&trans",
+                         "&trans", "&trans", "&trans"],
+                        ["&trans", "&trans", "&trans", "&trans", "&trans", "&trans",
+                         "&trans", "&trans", "&trans", "&trans", "&trans", "&trans",
+                         "&trans", "&trans", "&trans", "&trans", "&trans", "&trans",
+                         "&trans", "&trans", "&trans"]
+                    ]
+                }
+            ]
+        };
+
+        // Common key suggestions
+        const keySuggestions = {
+            basic: ["&kp A", "&kp B", "&kp C", "&kp D", "&kp E", "&kp F", "&kp G", "&kp H", "&kp I", "&kp J", "&kp K", "&kp L", "&kp M", "&kp N", "&kp O", "&kp P", "&kp Q", "&kp R", "&kp S", "&kp T", "&kp U", "&kp V", "&kp W", "&kp X", "&kp Y", "&kp Z"],
+            numbers: ["&kp N1", "&kp N2", "&kp N3", "&kp N4", "&kp N5", "&kp N6", "&kp N7", "&kp N8", "&kp N9", "&kp N0"],
+            modifiers: ["&kp LCTRL", "&kp RCTRL", "&kp LALT", "&kp RALT", "&kp LSHFT", "&kp RSHFT", "&kp LGUI", "&kp RGUI"],
+            special: ["&kp TAB", "&kp SPACE", "&kp ENTER", "&kp BSPC", "&kp DEL", "&kp ESC", "&kp RET"],
+            symbols: ["&kp EXCL", "&kp AT", "&kp HASH", "&kp DLLR", "&kp PRCNT", "&kp CARET", "&kp AMPS", "&kp STAR", "&kp LPAR", "&kp RPAR"],
+            navigation: ["&kp LEFT", "&kp RIGHT", "&kp UP", "&kp DOWN", "&kp HOME", "&kp END", "&kp PG_UP", "&kp PG_DN"],
+            layers: ["&mo 1", "&mo 2", "&mo 3", "&to 1", "&to 2", "&to 3", "&trans"],
+            bluetooth: ["&bt BT_CLR", "&bt BT_SEL 0", "&bt BT_SEL 1", "&bt BT_SEL 2", "&bt BT_SEL 3", "&bt BT_SEL 4"]
+        };
+
+        let currentLayer = 0;
+        let selectedKey = null;
+
+        function formatKeyForDisplay(keyBinding) {
+            // Convert ZMK key bindings to display format
+            const displayMap = {
+                "&kp ": "",
+                "&mo ": "MO ",
+                "&to ": "TO ",
+                "&trans": "---",
+                "&bt BT_CLR": "BT CLR",
+                "&bt BT_SEL 0": "BT 0",
+                "&bt BT_SEL 1": "BT 1",
+                "&bt BT_SEL 2": "BT 2",
+                "&bt BT_SEL 3": "BT 3",
+                "&bt BT_SEL 4": "BT 4",
+                "LCTRL": "CTRL",
+                "RCTRL": "CTRL",
+                "LALT": "ALT",
+                "RALT": "ALT",
+                "LSHFT": "SHIFT",
+                "RSHFT": "SHIFT",
+                "LGUI": "GUI",
+                "RGUI": "GUI",
+                "BSPC": "BKSP",
+                "COMMA": ",",
+                "DOT": ".",
+                "SEMI": ";",
+                "SQT": "'",
+                "FSLH": "/",
+                "BSLH": "\\",
+                "LBKT": "[",
+                "RBKT": "]",
+                "LBRC": "{",
+                "RBRC": "}",
+                "EXCL": "!",
+                "AT": "@",
+                "HASH": "#",
+                "DLLR": "$",
+                "PRCNT": "%",
+                "CARET": "^",
+                "AMPS": "&",
+                "STAR": "*",
+                "LPAR": "(",
+                "RPAR": ")",
+                "UNDER": "_",
+                "PLUS": "+",
+                "EQUAL": "=",
+                "MINUS": "-",
+                "PIPE": "|",
+                "TILDE": "~",
+                "GRAVE": "`"
+            };
+
+            let display = keyBinding;
+            for (const [zmk, disp] of Object.entries(displayMap)) {
+                display = display.replace(zmk, disp);
+            }
+            return display.trim();
+        }
+
+        function getKeyClass(keyBinding) {
+            if (keyBinding === "&trans") return "transparent";
+            if (keyBinding.includes("&mo") || keyBinding.includes("&to")) return "layer-key";
+            if (keyBinding.includes("&bt")) return "bluetooth";
+            if (keyBinding.includes("CTRL") || keyBinding.includes("ALT") || keyBinding.includes("SHFT") || keyBinding.includes("GUI")) return "modifier";
+            return "";
+        }
+
+        function renderKeyboard(layerIndex) {
+            const keyboard = document.getElementById('keyboard');
+            const layer = keymap.layers[layerIndex];
+            
+            keyboard.innerHTML = '';
+            
+            // Left half
+            const leftHalf = document.createElement('div');
+            leftHalf.className = 'half';
+            
+            const leftLabel = document.createElement('div');
+            leftLabel.className = 'left-label';
+            leftLabel.textContent = 'LEFT HALF';
+            leftHalf.appendChild(leftLabel);
+            
+            // Regular keys for left half
+            for (let row = 0; row < 3; row++) {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'row';
+                for (let col = 0; col < 6; col++) {
+                    const keyIndex = row * 6 + col;
+                    const keyBinding = layer.keys[0][keyIndex];
+                    const key = createKey(keyBinding, layerIndex, 0, keyIndex);
+                    rowDiv.appendChild(key);
+                }
+                leftHalf.appendChild(rowDiv);
+            }
+            
+            // Thumb cluster for left half
+            const leftThumb = document.createElement('div');
+            leftThumb.className = 'thumb-cluster';
+            for (let i = 18; i < 21; i++) {
+                const keyBinding = layer.keys[0][i];
+                const key = createKey(keyBinding, layerIndex, 0, i);
+                if (i === 20) key.classList.add('space');
+                else key.classList.add('thumb');
+                leftThumb.appendChild(key);
+            }
+            leftHalf.appendChild(leftThumb);
+            
+            // Right half
+            const rightHalf = document.createElement('div');
+            rightHalf.className = 'half';
+            
+            const rightLabel = document.createElement('div');
+            rightLabel.className = 'right-label';
+            rightLabel.textContent = 'RIGHT HALF';
+            rightHalf.appendChild(rightLabel);
+            
+            // Regular keys for right half
+            for (let row = 0; row < 3; row++) {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'row';
+                for (let col = 0; col < 6; col++) {
+                    const keyIndex = row * 6 + col;
+                    const keyBinding = layer.keys[1][keyIndex];
+                    const key = createKey(keyBinding, layerIndex, 1, keyIndex);
+                    rowDiv.appendChild(key);
+                }
+                rightHalf.appendChild(rowDiv);
+            }
+            
+            // Thumb cluster for right half
+            const rightThumb = document.createElement('div');
+            rightThumb.className = 'thumb-cluster';
+            for (let i = 18; i < 21; i++) {
+                const keyBinding = layer.keys[1][i];
+                const key = createKey(keyBinding, layerIndex, 1, i);
+                if (i === 18) key.classList.add('space');
+                else key.classList.add('thumb');
+                rightThumb.appendChild(key);
+            }
+            rightHalf.appendChild(rightThumb);
+            
+            keyboard.appendChild(leftHalf);
+            keyboard.appendChild(rightHalf);
+            
+            updateKeymapSource();
+        }
+
+        function createKey(keyBinding, layerIndex, half, keyIndex) {
+            const key = document.createElement('div');
+            key.className = 'key';
+            
+            const displayText = formatKeyForDisplay(keyBinding);
+            const keyClass = getKeyClass(keyBinding);
+            
+            if (keyClass) {
+                key.classList.add(keyClass);
+            }
+            
+            key.textContent = displayText;
+            key.onclick = () => selectKey(layerIndex, half, keyIndex, key);
+            
+            return key;
+        }
+
+        function selectKey(layerIndex, half, keyIndex, keyElement) {
+            // Remove previous selection
+            document.querySelectorAll('.key.selected').forEach(k => k.classList.remove('selected'));
+            
+            // Select this key
+            keyElement.classList.add('selected');
+            selectedKey = { layerIndex, half, keyIndex };
+            
+            // Show editor
+            showKeyEditor(keymap.layers[layerIndex].keys[half][keyIndex]);
+        }
+
+        function showKeyEditor(currentBinding) {
+            const editorContent = document.getElementById('keyEditorContent');
+            editorContent.innerHTML = `
+                <label for="keyInput">Key Binding:</label>
+                <input type="text" id="keyInput" class="key-input" value="${currentBinding}" onchange="updateSelectedKey(this.value)">
+                
+                <h4>Quick Select:</h4>
+                <div class="key-suggestions">
+                    ${Object.entries(keySuggestions).map(([category, keys]) => 
+                        `<div style="grid-column: 1/-1; font-weight: bold; color: #666; margin-top: 10px;">${category.toUpperCase()}</div>
+                         ${keys.map(key => `<div class="suggestion" onclick="updateSelectedKey('${key}')">${formatKeyForDisplay(key)}</div>`).join('')}`
+                    ).join('')}
+                </div>
+            `;
+        }
+
+        function updateSelectedKey(newBinding) {
+            if (!selectedKey) return;
+            
+            const { layerIndex, half, keyIndex } = selectedKey;
+            keymap.layers[layerIndex].keys[half][keyIndex] = newBinding;
+            
+            // Update the input field
+            const keyInput = document.getElementById('keyInput');
+            if (keyInput) keyInput.value = newBinding;
+            
+            // Re-render the current layer
+            renderKeyboard(currentLayer);
+            
+            showStatus('Key updated successfully!', 'success');
+        }
+
+        function showLayer(layerIndex) {
+            currentLayer = layerIndex;
+            renderKeyboard(layerIndex);
+            
+            // Update layer info
+            document.getElementById('layerInfo').textContent = keymap.layers[layerIndex].display + " (Click any key to edit)";
+            
+            // Update button states
+            const buttons = document.querySelectorAll('.layer-btn');
+            buttons.forEach((btn, index) => {
+                if (index === layerIndex) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            
+            // Clear selection
+            selectedKey = null;
+            document.getElementById('keyEditorContent').innerHTML = '<p>Click on a key to edit its binding</p>';
+        }
+
+        function updateKeymapSource() {
+            const sourceTextarea = document.getElementById('keymapSource');
+            let source = `#include <behaviors.dtsi>
+#include <dt-bindings/zmk/keys.h>
+#include <dt-bindings/zmk/bt.h>
+
+/ {
+    keymap {
+        compatible = "zmk,keymap";
+        
+`;
+
+            keymap.layers.forEach(layer => {
+                source += `        ${layer.name} {\n            bindings = <\n`;
+                
+                // Format the bindings in the correct layout
+                const leftKeys = layer.keys[0];
+                const rightKeys = layer.keys[1];
+                
+                // Regular keys (3 rows of 6 each)
+                for (let row = 0; row < 3; row++) {
+                    source += '                ';
+                    // Left side
+                    for (let col = 0; col < 6; col++) {
+                        source += leftKeys[row * 6 + col].padEnd(12);
+                    }
+                    source += '  ';
+                    // Right side
+                    for (let col = 0; col < 6; col++) {
+                        source += rightKeys[row * 6 + col].padEnd(12);
+                    }
+                    source += '\n';
+                }
+                
+                // Thumb cluster
+                source += '                                  ';
+                source += leftKeys[18].padEnd(12);
+                source += leftKeys[19].padEnd(12);
+                source += leftKeys[20].padEnd(12);
+                source += '              ';
+                source += rightKeys[18].padEnd(12);
+                source += rightKeys[19].padEnd(12);
+                source += rightKeys[20];
+                source += '\n';
+                
+                source += '            >;\n        };\n\n';
+            });
+
+            source += '    };\n};';
+            sourceTextarea.value = source;
+        }
+
+        function saveKeymap() {
+            const source = document.getElementById('keymapSource').value;
+            const blob = new Blob([source], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'corne.keymap';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showStatus('Keymap downloaded! Replace config/corne.keymap with the downloaded file.', 'success');
+        }
+
+        function loadKeymap() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.keymap';
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        // This would need more sophisticated parsing
+                        // For now, just show the content
+                        document.getElementById('keymapSource').value = e.target.result;
+                        showStatus('Keymap loaded! Manual parsing required.', 'success');
+                    };
+                    reader.readAsText(file);
+                }
+            };
+            input.click();
+        }
+
+        function exportKeymap() {
+            const source = document.getElementById('keymapSource').value;
+            const blob = new Blob([source], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'corne.keymap';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showStatus('Keymap exported!', 'success');
+        }
+
+        function copyToClipboard() {
+            const sourceTextarea = document.getElementById('keymapSource');
+            sourceTextarea.select();
+            document.execCommand('copy');
+            showStatus('Keymap copied to clipboard!', 'success');
+        }
+
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type} show`;
+            setTimeout(() => {
+                status.classList.remove('show');
+            }, 3000);
+        }
+
+        // Initialize
+        renderKeyboard(0);
+    </script>
+</body>
+</html>
