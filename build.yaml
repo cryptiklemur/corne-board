@@ -18,7 +18,7 @@
 #     artifact-name: corne_left_with_studio
 #
 ---
-board: [ "nice_nano_v2" ]
+board: [ "nrfmicro_13" ]
 shield: [ "corne_left", "corne_right" ]
 #include:
 #  - board: nice_nano_v2

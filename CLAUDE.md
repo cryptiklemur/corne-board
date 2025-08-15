@@ -9,7 +9,7 @@ This is a ZMK firmware configuration repository for a Corne (crkbd) split mechan
 ## Key Files and Structure
 
 - `config/corne.keymap` - Main keyboard layout configuration using device tree syntax
-- `build.yaml` - Defines the build matrix for GitHub Actions (board: nice_nano_v2, shields: corne_left/corne_right)
+- `build.yaml` - Defines the build matrix for GitHub Actions (board: nrfmicro_13, shields: corne_left/corne_right)
 - `config/west.yml` - West manifest file that manages ZMK dependencies (currently using ZMK v0.3)
 - `.github/workflows/build.yml` - GitHub Actions workflow that builds the firmware
 
@@ -33,6 +33,6 @@ Push changes to GitHub to trigger the build workflow. Successfully built firmwar
 ## Architecture Notes
 
 - The project uses West (Zephyr's meta-tool) for dependency management
-- Board configuration targets the nice_nano_v2 microcontroller
+- Board configuration targets the nrfmicro_13 microcontroller
 - Split keyboard configuration with separate left/right shield builds
 - The actual ZMK framework code is pulled as a dependency, not stored in this repo
