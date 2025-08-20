@@ -28,13 +28,9 @@
 include:
   - board: nrfmicro_13
     shield: corne_left nice_view_adapter nice_view
-  - board: nrfmicro_13_52840
-    shield: corne_left nice_view_adapter nice_view
   - board: nrfmicro_11
     shield: corne_left nice_view_adapter nice_view
   - board: nrfmicro_13
-    shield: corne_right nice_view_adapter nice_view
-  - board: nrfmicro_13_52840
     shield: corne_right nice_view_adapter nice_view
   - board: nrfmicro_11
     shield: corne_right nice_view_adapter nice_view
