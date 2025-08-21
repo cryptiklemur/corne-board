@@ -3,7 +3,7 @@ manifest:
   #  revision: v0.3
   remotes:
     - name: zmkfirmware
-      url-base: https://github.com/zmkfirmwarenice_view
+      url-base: https://github.com/zmkfirmware
     - name: m165437
       url-base: https://github.com/M165437
   projects:
